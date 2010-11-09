@@ -39,3 +39,10 @@ trim_infinite <- function(x, range = c(0, 1)) {
   x[x == Inf] <- range[2]
   x
 }
+
+# Trim finite numbers to specified range
+censor <- function(x, range) {
+  x[x < range[1]] <- range[1]
+  x[x > range[2]] <- range[2]
+  x
+}
