@@ -48,6 +48,22 @@ clip <- function(x, range = c(0, 1)) {
   x
 }
 
+
+#' Clip values to quantiles.
+#'
+#' @author Homer Strong <homer.strong@@gmail.com>
+#' @param x numeric vector of values to manipulate.
+#' @param range numeric vector of length two giving desired quantiles.
+#' @export
+quantile_clip <- function(x, quantiles = c(0, 1)) {
+  if (length(quantiles) > 2)
+    warning("Only the extrema of the quantiles will be used.")
+  range <- quantile(x, probs = c(min(quantiles), max(quantiles)))
+
+  clip(x, range = range)
+}
+
+
 #' Clip infinite values to range.
 #'
 #' @param x numeric vector of values to manipulate.
