@@ -1,34 +1,53 @@
-#' Colour gradient palette (continous).
+#' Arbitrary colour gradient palette (continous).
 #' 
+#' @param colours vector of colours
+#' @param values if colours should not be evenly positioned along the gradient
+#    this vector gives the position (between 0 and 1) for each colour in the
+#    \code{colours} vector.
+#' @param space colour space in which to calculate gradient.  "Lab" usually
+#'   best unless gradient goes through white. 
 #' @export
-gradient_n_pal <- function(colours, values = NULL, space="Lab") {
-  if (!is.null(values)) {
-    xs <- seq(0, 1, length = length(values))      
-    f <- approxfun(values, xs)
-    x <- f(x)
-  }
-
+gradient_n_pal <- function(colours, values = NULL, space = "Lab") {
   ramp <- colorRamp(colours, space = space)
-  function(x) rgb(ramp(x), max = 255)
+
+  function(x) {
+    if (!is.null(values)) {
+      xs <- seq(0, 1, length = length(values))      
+      f <- approxfun(values, xs)
+      x <- f(x)
+    }
+    
+    rgb(ramp(x), max = 255)
+  }
 }
 
-gradient_2_pal <- function(low = "#3B4FB8", mid = "white", high = "#B71B1A", space = "Lab") {
+#' Diverging colour gradient (continous).
+#' 
+#' @param low colour for low end of gradient.
+#' @param mid colour for mid point
+#' @param high colour for high end of gradient.
+#' @param space colour space in which to calculate gradient.  "Lab" usually
+#'   best unless gradient goes through white. 
+#' @export
+#' @examples
+#' x <- seq(-1, 1, length = 100)
+#' r <- sqrt(outer(x^2, x^2, "+"))
+#' image(r, col = div_gradient_pal()(seq(0, 1, length = 12)))
+#' image(r, col = div_gradient_pal()(seq(0, 1, length = 30)))
+#' image(r, col = div_gradient_pal()(seq(0, 1, length = 100)))
+#' image(r, col = div_gradient_pal(low = 
+#'    mnsl(complement("10R 4/6", fix = T)))(seq(0, 1, length = 100)))
+div_gradient_pal <- function(low = mnsl("10B 4/6"), mid = mnsl("N 8/0"), high = mnsl("10R 4/6"), space = "Lab") {
   gradient_n_pal(c(low, mid, high), space = space)
 }
 
-# rng <- .$output_set()  - .$midpoint
-# extent <- max(abs(rng))
-# 
-# domain <- .$input_set()
-# x[x < domain[1] | x > domain[2]] <- NA
-# 
-# x <- x - .$midpoint
-# x <- x / extent / 2 + 0.5
-# 
-# 
-# rgb(ramp(x), max = 255)
-# 
-
-gradient_pal <- function(low = "#3B4FB8", high = "#B71B1A", space = "Lab") {
+#' Sequential colour gradient palette (continous).
+#' 
+#' @param low colour for low end of gradient.
+#' @param high colour for high end of gradient.
+#' @param space colour space in which to calculate gradient.  "Lab" usually
+#'   best unless gradient goes through white. 
+#' @export
+seq_gradient_pal <- function(low = mnsl("10B 4/6"), high = mnsl("10R 4/6"), space = "Lab") {
   gradient_n_pal(c(low, high), space = space)
 }

@@ -24,6 +24,11 @@
 
 #' Create a new transformation function
 #'
+#' @param name transformation name
+#' @param transform function, or name of function, that performs the
+#    transformation
+#' @param inverse function, or name of function, that performs the
+#    inverse of the transformation
 #' @export
 new_trans <- function(name, transform, inverse, labels = inverse) {
   if (is.character(transform)) transform <- match.fun(transform)
@@ -37,7 +42,7 @@ new_trans <- function(name, transform, inverse, labels = inverse) {
 is.trans <- function(x) inherits(x, "trans")
 print.trans <- function(x, ...) cat("Transformer: ", x$name)
 
-#' Arc-sin square root transformation
+#' Arc-sin square root transformation.
 #'
 #' @export
 asn_trans <- function() {
@@ -47,27 +52,31 @@ asn_trans <- function() {
     function(x) sin(x / 2) ^ 2)
 }
 
-#' Arc-tangent transformation
+#' Arc-tangent transformation.
 #'
 #' @export
 atanh_trans <- function() {
   new_trans("atanh", "atanh", "tanh")
 }
 
-#' Box-Cox power transformation
+#' Box-Cox power transformation.
 #'
+#' @param p Exponent of boxcox transformation.
+#' @references See \url{http://en.wikipedia.org/wiki/Power_transform} for 
+#   more details on method.
 #' @export
 boxcox_trans <- function(p) {
   if (abs(p) < 1e-07) return(log_trans)
   
   new_trans(
-    str_c("pow-", format(exponent)),
+    str_c("pow-", format(p)),
     function(x) (x ^ p - 1) / p * sign(x - 1),
     function(x) (abs(x) * p + 1 * sign(x)) ^ (1 / p))
 }
 
-#' Exponential transformation (inverse of log transformation)
+#' Exponential transformation (inverse of log transformation).
 #'
+#' @param base Base of logarithm
 #' @export
 exp_trans <- function(base = exp(1)) {
   new_trans(
@@ -76,7 +85,7 @@ exp_trans <- function(base = exp(1)) {
     function(x) log(x, base = base))
 }
 
-#' Identity transformation (do nothing)
+#' Identity transformation (do nothing).
 #'
 #' @export
 identity_trans <- function() {
@@ -84,7 +93,7 @@ identity_trans <- function() {
 }
 
 
-#' Log transformation
+#' Log transformation.
 #' 
 #' @param base base of logarithm
 #' @aliases log_trans log10_trans log2_trans
@@ -105,10 +114,11 @@ log1p_trans <- function() {
   new_trans("log1p", "log1p", "expm1")
 }
 
-#' Probability transformation
+#' Probability transformation.
 #' 
-#' @param family probability distribution.  Should be standard R abbreviation
-#'   so that p + distribution is a valid probability density function.
+#' @param distribution probability distribution.  Should be standard R
+#'   abbreviation so that "p" + distribution is a valid probability density
+#'   function, and "q" + distribution is a valid quantile function.
 #' @param ... other arguments passed on to distribution and quantile functions
 #' @aliases probability_trans logit_trans, probit_trans
 #' @export
@@ -124,7 +134,7 @@ probability_trans <- function(distribution, ...) {
 logit_trans <- function() probability_trans("logis")
 probit_trans <- function() probability_trans("norm")
 
-#' Reciprocal transformation
+#' Reciprocal transformation.
 #'
 #' @export
 reciprocal_trans <- function() {
@@ -133,14 +143,14 @@ reciprocal_trans <- function() {
     function(x) 1 / x)
 }
 
-#' Reverse transformation
+#' Reverse transformation.
 #'
 #' @export
 reverse_trans <- function() {
   new_trans("reverse", function(x) -x, function(x) -x)
 }
 
-#' Square-root transformation (special case of Box-Cox)
+#' Square-root transformation (special case of Box-Cox).
 #'
 #' @export
 sqrt_trans <- function() {

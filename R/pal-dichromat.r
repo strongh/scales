@@ -1,6 +1,8 @@
 #' Dichromat (colour-blind) palette (discrete)
 #'
+#' @param name Name of colour palette.
 #' @importFrom dichromat colorschemes
+#' @export
 #' @examples
 #' dichromat_pal("BluetoOrange.10")(10)
 #' dichromat_pal("BluetoOrange.10")(5)

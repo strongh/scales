@@ -1,13 +1,20 @@
 #' Modify standard R colour in hcl colour space.
+#'
 #' Transforms rgb to hcl, sets non-missing arguments and then backtransforms
 #' to rgb.
 #'
+#' @importFrom colorspace RGB
+#' @importFrom colorspace coords
+#' @param h new hue
+#' @param l new luminance
+#' @param c new chroma
+#' @param alpha alpha value.  Defaults to 1.
 #' @export
 #' @examples 
 #' col2hcl(colors())
 col2hcl <- function(colour, h, c, l, alpha = 1) {
-  col <- colorspace::RGB(t(col2rgb(colour)) / 256)
-  coords <- colorspace::coords(as(col, "polarLUV"))
+  col <- RGB(t(col2rgb(colour)) / 256)
+  coords <- coords(as(col, "polarLUV"))
   
   if (missing(h)) h <- coords[, "H"]
   if (missing(c)) c <- coords[, "C"]
@@ -19,7 +26,45 @@ col2hcl <- function(colour, h, c, l, alpha = 1) {
 }
 
 #' Mute standard colour.
-#' Produces a colours with moderate luminance and saturation.
 #' 
+#' @param colour character vector of colours to modify
+#' @param l new luminance
+#' @param c new chroma
 #' @export
+#' @examples
+#' muted("red")
+#' muted("blue")
 muted <- function(colour, l=30, c=70) col2hcl(colour, l=l, c=c)
+
+#' Modify colour transparency.
+#' Vectorised in both colour and alpha.
+#' 
+#' @param colour colour
+#' @param alpha new alpha level in [0,1]
+#' @export
+#' @examples
+#' alpha("red", 0.1)
+#' alpha(colours(), 0.5)
+#' alpha("red", seq(0, 1, length = 10))
+alpha <- function(colour, alpha) {
+  alpha[is.na(alpha)] <- 0
+  col <- col2rgb(colour, TRUE) / 255
+  
+  if (length(colour) != length(alpha)) {
+    if (length(colour) > 1 && length(alpha) > 1) {
+      stop("Only one of colour and alpha can be vectorised")
+    }
+    
+    if (length(colour) > 1) {
+      alpha <- rep(alpha, length.out = length(colour))    
+    } else if (length(alpha) > 1) {
+      col <- col[, rep(1, length(alpha)), drop = FALSE]
+    }
+  }
+  # Only set if colour is opaque
+  col[4, ] <- ifelse(col[4, ] == 1, alpha, col[4, ])
+
+  new_col <- rgb(col[1,], col[2,], col[3,], col[4,])
+  new_col[is.na(colour)] <- NA  
+  new_col
+}
