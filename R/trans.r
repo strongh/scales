@@ -39,8 +39,15 @@ new_trans <- function(name, transform, inverse, labels = inverse) {
     labels = labels), class = "trans")
 }
 
+#' Test for transformation functions
+#'
+#' @export 
 is.trans <- function(x) inherits(x, "trans")
-print.trans <- function(x, ...) cat("Transformer: ", x$name)
+
+#' Print for transformation functions
+#'
+#' @export 
+print.trans <- function(x, ...) cat("Transformer: ", x$name, "\n")
 
 #' Arc-sin square root transformation.
 #'
