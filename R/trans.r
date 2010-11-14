@@ -41,7 +41,7 @@ is.trans <- function(x) inherits(x, "trans")
 
 #' Print for transformation functions
 #'
-#' @export 
+#' @S3method print trans
 print.trans <- function(x, ...) cat("Transformer: ", x$name, "\n")
 
 #' Arc-sin square root transformation.
