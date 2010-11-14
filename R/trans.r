@@ -2,11 +2,6 @@
 # seq <- function(., from, to, length) {
 #   .$transform(get("seq", pos=1)(.$inverse(from), .$inverse(to), length=length))
 # }
-# 
-# input_breaks <- function(., range) {
-#   grid.pretty(range)
-# }
-# 
 # # Minor breaks are regular on the original scale
 # # and need to cover entire range of plot
 # output_breaks <- function(., n = 2, b, r) {
@@ -17,26 +12,26 @@
 #   if (max(r) > max(b)) b <- c(b, b[length(b)] + bd)
 #   unique(unlist(mapply(.$seq, b[-length(b)], b[-1], length=n+1, SIMPLIFY=F)))
 # }
-#   
-# check <- function(., values) {
-#   .$inverse(.$transform(values))
-# }
 
-#' Create a new transformation function
+#' Create a new transformation function.
 #'
 #' @param name transformation name
 #' @param transform function, or name of function, that performs the
 #    transformation
 #' @param inverse function, or name of function, that performs the
 #    inverse of the transformation
+#' @param breaks default breaks function for this transformation. The breaks
+#'   function is applied on the transformed scale.
+#' @param format default format for this transformation. The format is applied
+#'   to breaks generated on the transformed scale.
 #' @export
-new_trans <- function(name, transform, inverse, labels = inverse) {
+new_trans <- function(name, transform, inverse, breaks = pretty_breaks(transform), format = trans_format(inverse)) {
   if (is.character(transform)) transform <- match.fun(transform)
   if (is.character(inverse)) inverse <- match.fun(inverse)
-  if (is.character(labels)) labels <- match.fun(labels)
   
-  structure(list(name = name, transform = transform, inverse = inverse, 
-    labels = labels), class = "trans")
+  structure(list(name = name, transform = transform, inverse = inverse,
+    breaks = breaks, labels = labels), 
+    class = "trans")
 }
 
 #' Test for transformation functions
@@ -74,11 +69,12 @@ atanh_trans <- function() {
 #' @export
 boxcox_trans <- function(p) {
   if (abs(p) < 1e-07) return(log_trans)
+  trans <- function(x) (x ^ p - 1) / p * sign(x - 1)
+  inv <- function(x) (abs(x) * p + 1 * sign(x)) ^ (1 / p)
   
   new_trans(
-    str_c("pow-", format(p)),
-    function(x) (x ^ p - 1) / p * sign(x - 1),
-    function(x) (abs(x) * p + 1 * sign(x)) ^ (1 / p))
+    str_c("pow-", format(p)), trans, inv,
+    trans_breaks(inv), scientific_format())
 }
 
 #' Exponential transformation (inverse of log transformation).
@@ -96,7 +92,8 @@ exp_trans <- function(base = exp(1)) {
 #'
 #' @export
 identity_trans <- function() {
-  new_trans("identity", "force", "force")
+  new_trans("identity", "force", "force",
+    pretty_breaks(), scientific_format())
 }
 
 
@@ -104,11 +101,13 @@ identity_trans <- function() {
 #' 
 #' @param base base of logarithm
 #' @aliases log_trans log10_trans log2_trans
-#' @export
+#' @export log_trans log10_trans log2_trans
 log_trans <- function(base = exp(1)) {
-  new_trans(str_c("log-", format(base)),
-    function(x) log(x, base),
-    function(x) base ^ x)
+  trans <- function(x) log(x, base)
+  inv <- function(x) base ^ x
+  
+  new_trans(str_c("log-", format(base)), trans, inv, 
+    integer_breaks(), trans_format(inv, scientific_format()))
 }
 log10_trans <- function() {
   log_trans(10)
@@ -117,6 +116,9 @@ log2_trans <- function() {
   log_trans(2)
 }
 
+#' Log plus one transformation
+#'
+#' @export
 log1p_trans <- function() {
   new_trans("log1p", "log1p", "expm1")
 }
@@ -127,8 +129,8 @@ log1p_trans <- function() {
 #'   abbreviation so that "p" + distribution is a valid probability density
 #'   function, and "q" + distribution is a valid quantile function.
 #' @param ... other arguments passed on to distribution and quantile functions
-#' @aliases probability_trans logit_trans, probit_trans
-#' @export
+#' @aliases probability_trans logit_trans probit_trans
+#' @export probability_trans logit_trans probit_trans
 probability_trans <- function(distribution, ...) {
   qfun <- match.fun(str_c("q", distribution))
   pfun <- match.fun(str_c("p", distribution))
