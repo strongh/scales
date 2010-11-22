@@ -1,10 +1,26 @@
 # Continuous scales ----------------------------------------------------------
+intersect_ranges <- function() {
+  function(existing, new) {
+    if (max(existing) < min(new) || max(new) < min(existing)) # ranges are disjoint
+      range(existing, new, na.rm = TRUE, finite = TRUE)
+    else # ranges overlap, take intersection of ranges
+      c(max(min(existing), min(new)), min(max(existing), max(new)))
+  }
+}
 
-train_continuous <- function(new, existing = NULL) {
+#' The default method of combining continuous values:
+#' take the range of both
+combine_ranges <- function() {
+  function(existing, new) {
+    range(existing, new, na.rm = TRUE, finite = TRUE)
+  }
+}
+
+train_continuous <- function(new, existing = NULL, combine_continuous = combine_ranges()) {
   if (!is.numeric(new)) {
     stop("Discrete value supplied to continuous scale",  call. = FALSE)
   }
-  range(existing, new, na.rm = TRUE, finite = TRUE)
+  combine_continuous(existing, new)
 }
 
 map_continuous <- function(palette, x, limits, na.value = NA) {
